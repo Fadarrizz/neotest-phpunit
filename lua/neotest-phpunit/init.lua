@@ -151,19 +151,30 @@ function NeotestAdapter.build_spec(args)
 
   local path = "/var/www/html" .. string.sub(position.path, string.len(vim.loop.cwd() or "") + 1)
 
-  local command = vim.tbl_flatten({
-        program,
-        path,
-        "--log-junit=" .. results_path,
-    })
+  local script_args = {
+    position.name ~= "tests" and path,
+    "--log-junit=" .. results_path,
+  }
 
   if position.type == "test" then
-        command = vim.tbl_flatten({
-            command,
-            "--filter",
-            position.name,
-        })
+    local filter_args = vim.tbl_flatten({
+      "--filter",
+      "::" .. position.name .. "( with data set .*)?$",
+    })
+
+    logger.info("position.path:", { path })
+    logger.info("--filter position.name:", { position.name })
+
+    script_args = vim.tbl_flatten({
+      script_args,
+      filter_args,
+    })
   end
+
+  local command = vim.tbl_flatten({
+    program,
+    script_args,
+  })
 
   logger.trace("PHPUnit command: ", { command })
 
