@@ -11,9 +11,8 @@ M.make_test_id = function(position)
     -- which means it should include position.path. However, as of PHPUnit 10, position.path
     -- includes the root directory of the project, which breaks the ID matching.
     -- As such, we need to remove the root directory from the path.
-    local path = string.sub(position.path, string.len(vim.loop.cwd()) + 2)
+    local id = position.path .. separator .. (tonumber(position.range[1]) + 1)
 
-    local id = path .. separator .. position.name
     logger.debug("Path to test file:", { position.path })
     logger.debug("Treesitter id:", { id })
 
@@ -53,10 +52,6 @@ local function errors_or_fails(tests)
   return errors_fails
 end
 
-local function make_short_output(test_attr, status)
-    return string.upper(status) .. " | " .. test_attr.name
-end
-
 ---Make the outputs for a given test
 ---@param test table
 ---@param output_file string
@@ -74,16 +69,16 @@ local function make_outputs(test, output_file)
     output_file = output_file,
   }
 
-  -- local test_failed = errors_or_fails(test)
-  -- if test_failed then
-  --   test_output.status = "failed"
-  --   test_output.short = test_failed[1]["failure"] or test_failed[1]["errors"]
-  --   test_output.errors = {
-  --     {
-  --       line = test_attr.line,
-  --     },
-  --   }
-  -- end
+  local test_failed = errors_or_fails(test)
+  if test_failed then
+    test_output.status = "failed"
+    test_output.short = test_failed[1]["failure"] or test_failed[1]["errors"]
+    test_output.errors = {
+      {
+        line = test_attr.line,
+      },
+    }
+  end
 
   return test_id, test_output
 end
