@@ -65,7 +65,7 @@ local function make_outputs(test, output_file)
   local classname = test_attr.classname or test_attr.class
   local test_output = {
     status = "passed",
-    short = string.upper(classname) .. "\n-> " .. "PASSED" .. " - " .. test_attr.name,
+    short = string.upper(classname) .. "\n-> " .. "PASS" .. " - " .. test_attr.name,
     output_file = output_file,
   }
 
