@@ -145,33 +145,25 @@ end
 ---@return neotest.RunSpec | nil
 function NeotestAdapter.build_spec(args)
   local position = args.tree:data()
-  local results_path = async.fn.tempname()
+  -- local results_path = async.fn.tempname()
+  local results_path = "storage/app/" .. os.date("pest-%Y%m%d-%H%M%S")
   local program = config.get_phpunit_cmd()
 
-  local script_args = {
-    position.name ~= "tests" and position.path,
-    "--log-junit=" .. results_path,
-  }
-
-  if position.type == "test" then
-    local filter_args = vim.tbl_flatten({
-      "--filter",
-      "::" .. position.name .. "( with data set .*)?$",
-    })
-
-    logger.info("position.path:", { position.path })
-    logger.info("--filter position.name:", { position.name })
-
-    script_args = vim.tbl_flatten({
-      script_args,
-      filter_args,
-    })
-  end
+  local path = "/var/www/html" .. string.sub(position.path, string.len(vim.loop.cwd() or "") + 1)
 
   local command = vim.tbl_flatten({
-    program,
-    script_args,
-  })
+        program,
+        path,
+        "--log-junit=" .. results_path,
+    })
+
+  if position.type == "test" then
+        command = vim.tbl_flatten({
+            command,
+            "--filter",
+            position.name,
+        })
+  end
 
   logger.trace("PHPUnit command: ", { command })
 
