@@ -1,10 +1,21 @@
 #!/bin/bash
 tempfile=".test_output.tmp"
 
+# Create packpath directory
+mkdir -p packpath/pack/manual/opt
+
+# Need to clone these plugins to run tests:
+git -C packpath/pack/manual/opt/plenary.nvim pull || git clone https://github.com/nvim-lua/plenary.nvim.git ./packpath/pack/manual/opt/plenary.nvim
+git -C packpath/pack/manual/opt/neotest pull || git clone https://github.com/nvim-neotest/neotest.git ./packpath/pack/manual/opt/neotest
+git -C packpath/pack/manual/opt/neotest-plenary pull || git clone https://github.com/nvim-neotest/neotest-plenary.git ./packpath/pack/manual/opt/neotest-plenary
+git -C packpath/pack/manual/opt/nvim-treesitter pull || git clone https://github.com/nvim-treesitter/nvim-treesitter.git ./packpath/pack/manual/opt/nvim-treesitter
+git -C packpath/pack/manual/opt/nvim-nio pull || git clone https://github.com/nvim-neotest/nvim-nio.git ./packpath/pack/manual/opt/nvim-nio
+
+# Run tests
 if [[ -n $1 ]]; then
-	nvim --headless --noplugin -u specs/init.vim -c "PlenaryBustedFile $1" | tee "${tempfile}"
+	nvim --headless --noplugin -u specs/minimal_init.vim -c "PlenaryBustedFile $1" | tee "${tempfile}"
 else
-	nvim --headless --noplugin -u specs/init.vim -c "PlenaryBustedDirectory specs/ {minimal_init = 'specs/init.vim'}" | tee "${tempfile}"
+	nvim --headless --noplugin -u specs/minimal_init.vim -c "PlenaryBustedDirectory specs/ {minimal_init = 'specs/minimal_init.vim'}" | tee "${tempfile}"
 fi
 
 # Plenary doesn't emit exit code 1 when tests have errors during setup
@@ -13,8 +24,8 @@ errors=$(sed 's/\x1b\[[0-9;]*m//g' "${tempfile}" | awk '/(Errors|Failed) :/ {pri
 rm "${tempfile}"
 
 if [[ -n $errors ]]; then
-  echo "Tests failed"
-  exit 1
+	echo "Tests failed"
+	exit 1
 fi
 
 exit 0
