@@ -41,18 +41,16 @@ end
 ---@param tests table,
 ---@return boolean,table,table
 local function errors_or_fails(tests)
-    local failed = false
-    local errors = {}
-    local fails = {}
+  local errors_fails = {}
 
-    iterate_key(tests, "error", errors)
-    iterate_key(tests, "failure", fails)
+  iterate_key(tests, "error", errors_fails)
+  iterate_key(tests, "failure", errors_fails)
 
-    if #errors > 0 or #fails > 0 then
-        failed = true
-    end
+  if #errors_fails == 0 then
+    return false
+  end
 
-    return failed, errors, fails
+  return errors_fails
 end
 
 local function make_short_output(test_attr, status)
@@ -64,54 +62,30 @@ end
 ---@param output_file string
 ---@return string, table
 local function make_outputs(test, output_file)
-    logger.debug("Pre-output test:", test)
-    local test_attr = test["_attr"] or test[1]["_attr"]
-    local name = string.gsub(test_attr.name, "^it (.*)", "%1")
+  local test_attr = test["_attr"] or test[1]["_attr"]
 
-    -- Difference to neotest-phpunit as of PHPUnit 10:
-    -- Pest's test IDs are in the format "path/to/test/file::test name"
-    local test_id = string.gsub(test_attr.file, "(.*)::(.*)", "%1") .. separator .. name
-    logger.debug("Pest id:", { test_id })
+  local test_id = test_attr.file .. separator .. test_attr.line
+  logger.info("PHPUnit id:", { test_id })
 
-    local test_output = {
-        status = "passed",
-        short = make_short_output(test_attr, "passed"),
-        output_file = output_file,
-    }
+  local classname = test_attr.classname or test_attr.class
+  local test_output = {
+    status = "passed",
+    short = string.upper(classname) .. "\n-> " .. "PASSED" .. " - " .. test_attr.name,
+    output_file = output_file,
+  }
 
-    local test_failed, errors, fails = errors_or_fails(test)
+  -- local test_failed = errors_or_fails(test)
+  -- if test_failed then
+  --   test_output.status = "failed"
+  --   test_output.short = test_failed[1]["failure"] or test_failed[1]["errors"]
+  --   test_output.errors = {
+  --     {
+  --       line = test_attr.line,
+  --     },
+  --   }
+  -- end
 
-    if test_failed then
-        logger.debug("test_failed:", { test_failed, errors, fails })
-        test_output.status = "failed"
-
-        if #errors > 0 then
-            local message = errors[1][1]
-            test_output.short = make_short_output(test_attr, "error") .. "\n\n" .. message
-            test_output.errors = {
-                {
-                    message = message
-                },
-            }
-        elseif #fails > 0 then
-            local message = fails[1][1]
-            test_output.short = make_short_output(test_attr, "failed") .. "\n\n" .. message
-            test_output.errors = {
-                {
-                    message = message
-                }
-            }
-        end
-    end
-
-    if test['skipped'] then
-        test_output.status = "skipped"
-        test_output.short = make_short_output(test_attr, "skipped")
-    end
-
-    logger.debug("test_output:", test_output)
-
-    return test_id, test_output
+  return test_id, test_output
 end
 
 ---Iterate through test results and create a table of test IDs and outputs
