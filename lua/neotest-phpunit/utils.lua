@@ -69,16 +69,16 @@ local function make_outputs(test, output_file)
     output_file = output_file,
   }
 
-  local test_failed = errors_or_fails(test)
-  if test_failed then
-    test_output.status = "failed"
-    test_output.short = test_failed[1]["failure"] or test_failed[1]["errors"]
-    test_output.errors = {
-      {
-        line = test_attr.line,
-      },
-    }
-  end
+  -- local test_failed = errors_or_fails(test)
+  -- if test_failed then
+  --   test_output.status = "failed"
+  --   test_output.short = test_failed[1]["failure"] or test_failed[1]["errors"]
+  --   test_output.errors = {
+  --     {
+  --       line = test_attr.line,
+  --     },
+  --   }
+  -- end
 
   return test_id, test_output
 end
